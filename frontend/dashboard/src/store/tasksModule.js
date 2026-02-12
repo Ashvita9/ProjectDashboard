@@ -83,7 +83,7 @@ const actions = {
       // include current user id so backend enforces project ownership checks
       const userId = rootState?.auth?.userId
       const response = await taskService.fetchTasksByProject(projectId, userId)
-      const tasks = response.data.result || []
+      const tasks = response.data.tasks || response.data.result || []
       commit('SET_TASKS_BY_PROJECT', { projectId, tasks })
       return tasks
     } catch (error) {

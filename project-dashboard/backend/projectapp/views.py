@@ -158,27 +158,17 @@ class ProjectView(APIView):
 
 class TaskView(APIView):
     def get(self, request):
-        request_data = request.data or {}
-        request_user_id = request_data.get('user_id')
-        project_id = request_data.get('project_id')
-
-        if project_id:
-            project = Project.objects.filter(id=project_id).first()
-            if not project:
-                return Response({'message': 'project not found'}, status=status.HTTP_404_NOT_FOUND)
-            if request_user_id and str(project.owner.id) != str(request_user_id):
-                return Response({'message': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
-            tasks = Task.objects.filter(project=project)
-        elif request_user_id:
-            # list tasks for all projects owned by user
-            projects = Project.objects.filter(owner=request_user_id)
-            tasks = Task.objects.filter(project__in=projects)
-        else:
-            # no filters provided, return all tasks
-            tasks = Task.objects.all()
-
-        response_data = TaskSerializer(tasks, many=True).data
-        return Response({"result": response_data}, status=status.HTTP_200_OK)
+        user_id = request.GET.get('user_id')
+        project_id = request.GET.get('project_id')
+        if not user_id:
+            return Response({'message': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not project_id:
+            return Response({'message': 'project_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        tasks=Task.objects.filter(project=project_id).all()
+        serialized_tasks = TaskSerializer(tasks, many=True).data
+        return Response({"tasks": serialized_tasks}, status=status.HTTP_200_OK)
+        
+        
 
     def post(self, request):
         request_data = request.data or {}
