@@ -23,29 +23,24 @@ def _bool_value(value):
 
 class ProjectView(APIView):
     def get(self, request):
-        request_data = request.data or {}
-        request_user_id = request_data.get('user_id')
-        include_users = _bool_value(request_data.get('include_users'))
+        request_user_id = request.GET.get('user_id') 
+        if not request_user_id:
+            return Response({'message': 'user id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        userObj=User.objects(id=request_user_id).first()
+        if not userObj:
+            return Response({'message': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        projects=Project.objects(owner=request_user_id).all()
+        return Response(
+            {
+                "projects": ProjectSerializer(projects, many=True).data,
+                "message": "projects fetched successfully"
+            },
+            status=status.HTTP_200_OK
+        )
 
-        if request_user_id:
-            user = User.objects(id=request_user_id).first()
-            if not user:
-                return Response({'message': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-            projects = Project.objects.filter(owner=user)
-        else:
-            projects = Project.objects.all()
-
-        response_data = {
-            "result": ProjectSerializer(projects, many=True).data
-        }
-        if include_users or not request_user_id:
-            response_data["users"] = UserSerializer(User.objects.all(), many=True).data
-
-        return Response(response_data, status=status.HTTP_200_OK)
-    
     def post(self, request):
         request_data = request.data or {}
-        request_user_id = request_data.get('user_id')
+        request_user_id = request_data.get('user_id')       
         name = request_data.get('name')
         description = request_data.get('description')
         required_keys = ['user_id', 'name']
