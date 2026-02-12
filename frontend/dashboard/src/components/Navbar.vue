@@ -1,28 +1,28 @@
 <template>
-  <nav class="navbar">
-    <router-link to="/dashboard" class="navbar-brand">
-      📊 Project Dashboard
-    </router-link>
+  <nav class="nav">
+    <div class="nav-inner">
+      <router-link to="/dashboard" class="nav-brand">
+        <span class="brand-icon">◆</span>
+        <span class="brand-text">Dashboard</span>
+      </router-link>
 
-    <ul v-if="isAuthenticated" class="navbar-nav">
-      <li>
-        <router-link to="/dashboard" exact-active-class="active">
-          Dashboard
+      <div v-if="isAuthenticated" class="nav-links">
+        <router-link to="/dashboard" exact-active-class="is-active">
+          Overview
         </router-link>
-      </li>
-      <li>
-        <router-link to="/projects" active-class="active">
+        <router-link to="/projects" active-class="is-active">
           Projects
         </router-link>
-      </li>
-      <li>
-        <span class="separator">|</span>
-      </li>
-      <li class="user-menu">
-        <span class="user-name">{{ user?.username }}</span>
-        <button class="logout-btn" @click="handleLogout">Logout</button>
-      </li>
-    </ul>
+      </div>
+
+      <div v-if="isAuthenticated" class="nav-right">
+        <div class="user-pill">
+          <span class="avatar">{{ user?.username?.charAt(0)?.toUpperCase() }}</span>
+          <span class="username">{{ user?.username }}</span>
+        </div>
+        <button class="btn-ghost" @click="handleLogout">Sign out</button>
+      </div>
+    </div>
   </nav>
 </template>
 
@@ -44,98 +44,134 @@ export default {
 </script>
 
 <style scoped>
-.navbar {
-  background-color: var(--clay-primary);
-  color: white;
-  padding: 15px 30px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 8px var(--clay-shadow-dark);
+.nav {
   position: sticky;
   top: 0;
   z-index: 100;
+  background: rgba(10, 10, 15, 0.8);
+  backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid var(--border);
 }
 
-.navbar-brand {
-  font-size: 24px;
+.nav-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text-primary);
   font-weight: 700;
-  text-decoration: none;
-  color: white;
-  transition: opacity 0.3s ease;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
 }
 
-.navbar-brand:hover {
-  opacity: 0.8;
+.brand-icon {
+  color: var(--accent);
+  font-size: 18px;
 }
 
-.navbar-nav {
+.nav-links {
   display: flex;
-  gap: 25px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  align-items: center;
+  gap: 4px;
 }
 
-.navbar-nav a {
-  color: white;
-  text-decoration: none;
-  transition: color 0.3s ease;
+.nav-links a {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
   font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.15s var(--ease);
 }
 
-.navbar-nav a:hover {
-  color: var(--clay-secondary-light);
+.nav-links a:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
-.navbar-nav a.active {
-  color: var(--clay-secondary-light);
-  border-bottom: 2px solid var(--clay-secondary-light);
-  padding-bottom: 8px;
+.nav-links a.is-active {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
 }
 
-.separator {
-  opacity: 0.5;
-}
-
-.user-menu {
+.nav-right {
+  margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-left: 10px;
+  gap: 16px;
 }
 
-.user-name {
-  font-weight: 600;
+.user-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
 }
 
-.logout-btn {
-  background-color: var(--clay-secondary);
+.avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.username {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.btn-ghost {
+  background: transparent;
   border: none;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 13px;
   font-weight: 500;
-  transition: background-color 0.3s ease;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s var(--ease);
+  box-shadow: none;
 }
 
-.logout-btn:hover {
-  background-color: var(--clay-secondary-dark);
+.btn-ghost:hover {
+  color: var(--color-danger);
+  background: var(--color-danger-muted);
+  box-shadow: none;
 }
 
-@media (max-width: 768px) {
-  .navbar {
-    flex-direction: column;
-    gap: 15px;
-    padding: 15px;
+@media (max-width: 640px) {
+  .nav-inner {
+    padding: 0 16px;
+    gap: 16px;
   }
 
-  .navbar-nav {
-    width: 100%;
-    justify-content: center;
-    gap: 15px;
+  .brand-text {
+    display: none;
+  }
+
+  .username {
+    display: none;
   }
 }
 </style>

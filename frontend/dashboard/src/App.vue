@@ -13,10 +13,7 @@ import NotificationCenter from '@/components/NotificationCenter.vue'
 
 export default {
   name: 'App',
-  components: {
-    NavBar,
-    NotificationCenter
-  },
+  components: { NavBar, NotificationCenter },
   computed: {
     ...mapState('auth', ['isAuthenticated'])
   }
@@ -28,6 +25,6 @@ export default {
 
 #app {
   min-height: 100vh;
-  background-color: var(--clay-light-bg);
+  background-color: var(--bg-primary);
 }
 </style>

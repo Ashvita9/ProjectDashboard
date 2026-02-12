@@ -1,36 +1,22 @@
 <template>
-  <div class="task-card card">
-    <div class="card-header flex-between">
-      <div>
-        <h4 class="task-title">{{ task.title }}</h4>
-        <span class="badge" :class="`badge-${task.status}`">
-          {{ statusLabel }}
-        </span>
-      </div>
-      <div class="actions">
-        <button class="btn-icon" @click="editTask" title="Edit">
-          ✎
-        </button>
-        <button class="btn-icon btn-danger" @click="deleteTask" title="Delete">
-          ✕
-        </button>
+  <div class="task-card">
+    <div class="task-top">
+      <h4 class="task-title">{{ task.title }}</h4>
+      <div class="task-actions">
+        <button class="btn-icon" @click="editTask" title="Edit">✎</button>
+        <button class="btn-icon btn-icon-danger" @click="deleteTask" title="Delete">✕</button>
       </div>
     </div>
 
-    <p v-if="task.description" class="description">{{ task.description }}</p>
+    <p v-if="task.description" class="task-desc">{{ task.description }}</p>
 
-    <div class="task-meta">
-      <span class="meta-item">
-        <strong>Created:</strong> {{ formatDate(task.created_at) }}
-      </span>
+    <div class="task-bottom">
+      <span class="badge" :class="`badge-${task.status}`">{{ statusLabel }}</span>
+      <span class="task-date">{{ formatDate(task.created_at) }}</span>
     </div>
 
-    <div v-if="!viewOnly" class="task-actions">
-      <select
-        :value="task.status"
-        @change="changeStatus"
-        class="status-select"
-      >
+    <div v-if="!viewOnly" class="task-status-change">
+      <select :value="task.status" @change="changeStatus" class="status-select">
         <option value="todo">To Do</option>
         <option value="in_progress">In Progress</option>
         <option value="done">Done</option>
@@ -43,61 +29,36 @@
 export default {
   name: 'TaskCard',
   props: {
-    task: {
-      type: Object,
-      required: true
-    },
-    viewOnly: {
-      type: Boolean,
-      default: false
-    }
+    task: { type: Object, required: true },
+    viewOnly: { type: Boolean, default: false }
   },
   computed: {
     statusLabel() {
-      const labels = {
-        todo: 'To Do',
-        in_progress: 'In Progress',
-        done: 'Done'
-      }
-      return labels[this.task.status] || this.task.status
+      return { todo: 'To Do', in_progress: 'In Progress', done: 'Done' }[this.task.status] || this.task.status
     }
   },
   methods: {
-    formatDate(dateString) {
-      if (!dateString) return ''
-      const date = new Date(dateString)
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      })
+    formatDate(d) {
+      if (!d) return ''
+      return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     },
-    editTask() {
-      this.$emit('edit')
-    },
+    editTask() { this.$emit('edit') },
     async deleteTask() {
-      if (confirm('Are you sure you want to delete this task?')) {
+      if (confirm('Delete this task?')) {
         try {
           await this.$store.dispatch('tasks/deleteTask', this.task.id)
           this.$emit('deleted')
-        } catch (error) {
-          alert('Failed to delete task')
-        }
+        } catch (e) { alert('Failed to delete task') }
       }
     },
     async changeStatus(event) {
-      const newStatus = event.target.value
       try {
         await this.$store.dispatch('tasks/updateTask', {
-          taskId: this.task.id,
-          title: this.task.title,
-          description: this.task.description,
-          status: newStatus
+          taskId: this.task.id, title: this.task.title,
+          description: this.task.description, status: event.target.value
         })
-        this.$emit('status-changed', newStatus)
-      } catch (error) {
-        alert('Failed to update task status')
-      }
+        this.$emit('status-changed', event.target.value)
+      } catch (e) { alert('Failed to update status') }
     }
   }
 }
@@ -105,71 +66,105 @@ export default {
 
 <style scoped>
 .task-card {
-  border-left: 4px solid var(--clay-secondary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  transition: all 0.15s var(--ease);
+}
+
+.task-card:hover {
+  border-color: var(--border-strong);
+}
+
+.task-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .task-title {
-  margin: 0;
-  color: var(--clay-primary);
-  font-size: 16px;
-}
-
-.description {
-  color: var(--clay-accent-info);
-  margin: 10px 0;
-  line-height: 1.5;
   font-size: 14px;
-}
-
-.task-meta {
-  display: flex;
-  gap: 15px;
-  font-size: 12px;
-  color: var(--clay-accent-info);
-  margin: 10px 0;
-}
-
-.meta-item {
-  display: block;
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-}
-
-.btn-icon {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  color: var(--clay-primary);
-  transition: all 0.3s ease;
-  padding: 4px 8px;
-}
-
-.btn-icon:hover {
-  color: var(--clay-secondary);
-  transform: scale(1.2);
-}
-
-.btn-icon.btn-danger {
-  color: var(--clay-accent-danger);
-}
-
-.btn-icon.btn-danger:hover {
-  color: #B76560;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin: 0;
 }
 
 .task-actions {
-  margin-top: 15px;
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.btn-icon {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s var(--ease);
+  box-shadow: none;
+}
+
+.btn-icon:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.btn-icon-danger:hover {
+  color: var(--color-danger);
+  background: var(--color-danger-muted);
+}
+
+.task-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.task-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.task-date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.task-status-change {
+  margin-top: 10px;
 }
 
 .status-select {
+  width: 100%;
   padding: 6px 10px;
-  border: 1px solid var(--clay-border);
-  border-radius: 4px;
-  cursor: pointer;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  color: var(--text-primary);
   font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s var(--ease);
+}
+
+.status-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-muted);
 }
 </style>

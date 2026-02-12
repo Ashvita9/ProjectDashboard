@@ -1,45 +1,35 @@
 <template>
-  <div class="projects-page">
+  <div class="page">
     <div class="page-header">
-      <h1>My Projects</h1>
-      <button class="btn btn-primary" @click="showCreateModal = true">
-        + Create New Project
-      </button>
+      <div>
+        <h1>Projects</h1>
+        <p class="page-sub">Manage and organize your work.</p>
+      </div>
+      <button class="btn btn-primary" @click="showCreateModal = true">+ New Project</button>
     </div>
 
     <div v-if="errors.length" class="alert alert-error">
       <div v-for="(error, index) in errors" :key="index">{{ error }}</div>
     </div>
 
-    <div v-if="isLoading" class="loading-container">
+    <div v-if="isLoading" class="center-state">
       <div class="spinner"></div>
     </div>
 
-    <div v-else-if="projects.length > 0" class="projects-grid">
-      <ProjectCard
-        v-for="project in projects"
-        :key="project.id"
-        :project="project"
-        @edit="editProject(project)"
-        @deleted="handleProjectDeleted"
-      />
+    <div v-else-if="projects.length > 0" class="project-grid">
+      <ProjectCard v-for="project in projects" :key="project.id" :project="project" @edit="editProject(project)"
+        @deleted="handleProjectDeleted" />
     </div>
 
     <div v-else class="empty-state">
-      <h2>No Projects Yet</h2>
-      <p>Create your first project to get started!</p>
-      <button class="btn btn-primary" @click="showCreateModal = true">
-        Create Your First Project
-      </button>
+      <div class="empty-icon">◇</div>
+      <h3>No projects yet</h3>
+      <p>Create your first project to get started.</p>
+      <button class="btn btn-primary" @click="showCreateModal = true">Create Project</button>
     </div>
 
-    <ProjectModal
-      v-if="showCreateModal || showEditModal"
-      :project="editingProject"
-      @close="closeModal"
-      @created="handleProjectCreated"
-      @updated="handleProjectUpdated"
-    />
+    <ProjectModal v-if="showCreateModal || showEditModal" :project="editingProject" @close="closeModal"
+      @created="handleProjectCreated" @updated="handleProjectUpdated" />
   </div>
 </template>
 
@@ -50,117 +40,99 @@ import ProjectModal from '@/components/Project/ProjectModal.vue'
 
 export default {
   name: 'Projects',
-  components: {
-    ProjectCard,
-    ProjectModal
-  },
+  components: { ProjectCard, ProjectModal },
   data() {
-    return {
-      showCreateModal: false,
-      showEditModal: false,
-      editingProject: null,
-      errors: []
-    }
+    return { showCreateModal: false, showEditModal: false, editingProject: null, errors: [] }
   },
   computed: {
     ...mapState('projects', ['isLoading']),
     ...mapGetters('projects', ['allProjects']),
-    projects() {
-      return this.allProjects
-    }
+    projects() { return this.allProjects }
   },
-  mounted() {
-    this.loadProjects()
-  },
+  mounted() { this.loadProjects() },
   methods: {
     async loadProjects() {
       try {
-        const userId = this.$store.state.auth.userId
-        await this.$store.dispatch('projects/fetchProjects', userId)
-      } catch (error) {
-        const errorMsg = error.response?.data?.message || 'Failed to load projects'
-        this.errors.push(errorMsg)
-      }
+        await this.$store.dispatch('projects/fetchProjects', this.$store.state.auth.userId)
+      } catch (e) { this.errors.push(e.response?.data?.message || 'Failed to load projects') }
     },
-    editProject(project) {
-      this.editingProject = project
-      this.showEditModal = true
-    },
-    closeModal() {
-      this.showCreateModal = false
-      this.showEditModal = false
-      this.editingProject = null
-    },
-    handleProjectCreated() {
-      this.closeModal()
-      this.errors = []
-    },
-    handleProjectUpdated() {
-      this.closeModal()
-      this.errors = []
-    },
-    handleProjectDeleted() {
-      this.errors = []
-    }
+    editProject(project) { this.editingProject = project; this.showEditModal = true },
+    closeModal() { this.showCreateModal = false; this.showEditModal = false; this.editingProject = null },
+    handleProjectCreated() { this.closeModal(); this.errors = [] },
+    handleProjectUpdated() { this.closeModal(); this.errors = [] },
+    handleProjectDeleted() { this.errors = [] }
   }
 }
 </script>
 
 <style scoped>
-.projects-page {
-  padding: 30px;
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
+  align-items: flex-end;
+  margin-bottom: 28px;
+  gap: 16px;
 }
 
 .page-header h1 {
-  color: var(--clay-primary);
-  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
-.projects-grid {
+.page-sub {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.project-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 25px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
 }
 
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 80px 20px;
+  color: var(--text-muted);
 }
 
-.empty-state h2 {
-  color: var(--clay-primary);
-  margin-bottom: 10px;
+.empty-icon {
+  font-size: 40px;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  color: var(--text-primary);
+  margin-bottom: 8px;
 }
 
 .empty-state p {
-  color: var(--clay-accent-info);
   margin-bottom: 20px;
+  font-size: 14px;
 }
 
-.loading-container {
+.center-state {
   display: flex;
   justify-content: center;
-  padding: 60px;
+  padding: 80px;
 }
 
-@media (max-width: 768px) {
-  .projects-page {
-    padding: 20px;
-  }
-
+@media (max-width: 640px) {
   .page-header {
     flex-direction: column;
-    gap: 15px;
+    align-items: flex-start;
   }
 
-  .projects-grid {
+  .project-grid {
     grid-template-columns: 1fr;
   }
 }

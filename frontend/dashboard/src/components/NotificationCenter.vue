@@ -1,16 +1,9 @@
 <template>
-  <transition-group
-    name="notification"
-    tag="div"
-    class="notifications-container"
-  >
-    <div
-      v-for="notification in notifications"
-      :key="notification.id"
-      :class="['notification-item', `notification-${notification.type}`]"
-    >
-      {{ notification.message }}
-      <button class="close-btn" @click="removeNotification(notification.id)">×</button>
+  <transition-group name="notification" tag="div" class="toast-container">
+    <div v-for="notification in notifications" :key="notification.id" :class="['toast', `toast-${notification.type}`]">
+      <span class="toast-dot" :class="`dot-${notification.type}`"></span>
+      <span class="toast-msg">{{ notification.message }}</span>
+      <button class="toast-close" @click="removeNotification(notification.id)">×</button>
     </div>
   </transition-group>
 </template>
@@ -22,104 +15,98 @@ let notificationId = 0
 
 export default {
   name: 'NotificationCenter',
-  data() {
-    return {
-      notifications: []
-    }
-  },
+  data() { return { notifications: [] } },
   mounted() {
     eventBus.onNotify((notification) => {
       const id = notificationId++
-      const item = {
-        id,
-        ...notification
-      }
-      this.notifications.push(item)
-
-      // Auto-remove after 4 seconds
-      setTimeout(() => {
-        this.removeNotification(id)
-      }, 4000)
+      this.notifications.push({ id, ...notification })
+      setTimeout(() => this.removeNotification(id), 4000)
     })
   },
   methods: {
     removeNotification(id) {
-      const index = this.notifications.findIndex(n => n.id === id)
-      if (index !== -1) {
-        this.notifications.splice(index, 1)
-      }
+      const i = this.notifications.findIndex(n => n.id === id)
+      if (i !== -1) this.notifications.splice(i, 1)
     }
   }
 }
 </script>
 
 <style scoped>
-.notifications-container {
+.toast-container {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 16px;
+  right: 16px;
   z-index: 9999;
-  max-width: 400px;
-}
-
-.notification-item {
-  background-color: white;
-  padding: 15px 20px;
-  border-radius: 6px;
-  margin-bottom: 10px;
-  box-shadow: 0 4px 12px rgba(42, 36, 33, 0.2);
-  border-left: 4px solid;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 380px;
+}
+
+.toast {
+  display: flex;
   align-items: center;
-  animation: slideIn 0.3s ease;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  animation: slideIn 0.25s var(--ease);
 }
 
-.notification-success {
-  border-left-color: var(--clay-accent-success);
-  background-color: #F0F8F0;
-  color: #4A5C2A;
+.toast-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.notification-error {
-  border-left-color: var(--clay-accent-danger);
-  background-color: #F8F0F0;
-  color: #5C4A4A;
+.dot-success {
+  background: var(--color-success);
 }
 
-.notification-info {
-  border-left-color: var(--clay-accent-info);
-  background-color: #F5F3F0;
-  color: var(--clay-primary);
+.dot-error {
+  background: var(--color-danger);
 }
 
-.notification-warning {
-  border-left-color: var(--clay-accent-warning);
-  background-color: #FFF5EE;
-  color: #8B6A4A;
+.dot-info {
+  background: var(--color-info);
 }
 
-.close-btn {
+.dot-warning {
+  background: var(--color-warning);
+}
+
+.toast-msg {
+  flex: 1;
+}
+
+.toast-close {
   background: none;
   border: none;
-  color: inherit;
+  color: var(--text-muted);
+  font-size: 18px;
   cursor: pointer;
-  font-size: 20px;
-  padding: 0;
-  margin-left: 10px;
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
+  padding: 0 4px;
+  box-shadow: none;
+  transition: color 0.15s var(--ease);
 }
 
-.close-btn:hover {
-  opacity: 1;
+.toast-close:hover {
+  color: var(--text-primary);
 }
 
 @keyframes slideIn {
   from {
-    transform: translateX(400px);
+    transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -127,7 +114,7 @@ export default {
 }
 
 .notification-leave-active {
-  animation: slideOut 0.3s ease;
+  animation: slideOut 0.2s var(--ease);
 }
 
 @keyframes slideOut {
@@ -135,8 +122,9 @@ export default {
     transform: translateX(0);
     opacity: 1;
   }
+
   to {
-    transform: translateX(400px);
+    transform: translateX(100%);
     opacity: 0;
   }
 }

@@ -1,67 +1,39 @@
 <template>
-  <div class="project-card card">
-    <div class="card-header flex-between">
-      <h3 class="card-title">{{ project.name }}</h3>
-      <div class="actions">
-        <button class="btn-icon" @click="editProject" title="Edit">
-          ✎
-        </button>
-        <button class="btn-icon btn-danger" @click="deleteProject" title="Delete">
-          ✕
-        </button>
+  <div class="project-card">
+    <div class="card-top">
+      <div class="card-dot"></div>
+      <div class="card-actions">
+        <button class="btn-icon" @click="editProject" title="Edit">✎</button>
+        <button class="btn-icon btn-icon-danger" @click="deleteProject" title="Delete">✕</button>
       </div>
     </div>
 
-    <p class="description">{{ project.description || 'No description' }}</p>
+    <h3 class="card-name">{{ project.name }}</h3>
+    <p class="card-desc">{{ project.description || 'No description' }}</p>
 
-    <div class="project-meta">
-      <span class="meta-item">
-        <strong>Owner:</strong> {{ project.owner?.username || 'Unknown' }}
-      </span>
-      <span class="meta-item">
-        <strong>Created:</strong> {{ formatDate(project.created_at) }}
-      </span>
+    <div class="card-footer">
+      <span class="card-date">{{ formatDate(project.created_at) }}</span>
+      <router-link :to="`/projects/${project.id}`" class="btn btn-outline btn-sm">Open →</router-link>
     </div>
-
-    <router-link
-      :to="`/projects/${project.id}`"
-      class="btn btn-secondary mt-20"
-    >
-      View Tasks
-    </router-link>
   </div>
 </template>
 
 <script>
 export default {
   name: 'ProjectCard',
-  props: {
-    project: {
-      type: Object,
-      required: true
-    }
-  },
+  props: { project: { type: Object, required: true } },
   methods: {
-    formatDate(dateString) {
-      if (!dateString) return ''
-      const date = new Date(dateString)
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      })
+    formatDate(d) {
+      if (!d) return ''
+      return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
     },
-    editProject() {
-      this.$emit('edit')
-    },
+    editProject() { this.$emit('edit') },
     async deleteProject() {
       if (confirm('Are you sure you want to delete this project?')) {
         try {
           await this.$store.dispatch('projects/deleteProject', this.project.id)
           this.$emit('deleted')
-        } catch (error) {
-          alert('Failed to delete project')
-        }
+        } catch (e) { alert('Failed to delete project') }
       }
     }
   }
@@ -70,54 +42,100 @@ export default {
 
 <style scoped>
 .project-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 22px;
   display: flex;
   flex-direction: column;
+  transition: all 0.2s var(--ease);
 }
 
-.actions {
+.project-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.card-top {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.card-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.card-actions {
+  display: flex;
+  gap: 4px;
 }
 
 .btn-icon {
-  background: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
   border: none;
-  font-size: 18px;
+  color: var(--text-muted);
+  font-size: 14px;
   cursor: pointer;
-  color: var(--clay-primary);
-  transition: all 0.3s ease;
-  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s var(--ease);
+  box-shadow: none;
 }
 
 .btn-icon:hover {
-  color: var(--clay-secondary);
-  transform: scale(1.2);
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
-.btn-icon.btn-danger {
-  color: var(--clay-accent-danger);
+.btn-icon-danger:hover {
+  color: var(--color-danger);
+  background: var(--color-danger-muted);
 }
 
-.btn-icon.btn-danger:hover {
-  color: #B76560;
+.card-name {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text-primary);
 }
 
-.description {
-  color: var(--clay-accent-info);
-  margin: 10px 0;
-  line-height: 1.5;
-}
-
-.project-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.card-desc {
   font-size: 13px;
-  color: var(--clay-accent-info);
-  margin: 15px 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+  flex: 1;
+  margin-bottom: 18px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.meta-item {
-  display: block;
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.card-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 12px;
 }
 </style>
