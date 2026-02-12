@@ -52,8 +52,9 @@ const actions = {
     commit('SET_ERROR', null)
     try {
       const response = await projectService.fetchProjects(userId)
-      commit('SET_PROJECTS', response.data.result || [])
-      return response.data.result
+      const projects = response.data.projects || response.data.result || []
+      commit('SET_PROJECTS', projects)
+      return projects
     } catch (error) {
       const errorMsg = error.response?.data?.message || 'Failed to fetch projects'
       commit('SET_ERROR', errorMsg)
@@ -80,19 +81,24 @@ const actions = {
     }
   },
 
-  async updateProject({ commit }, { projectId, name, description }) {
+  async updateProject({ commit, state }, { projectId, name, description }) {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
     try {
       const response = await projectService.updateProject(projectId, name, description)
-      const updatedProject = response.data.project
+      const updatedProject = response.data.project || response.data.result
+      
+      if (!updatedProject || !updatedProject.id) {
+          throw new Error('Project update returned invalid data')
+      }
+
       commit('UPDATE_PROJECT', updatedProject)
-      if (commit._vm.$store.state.projects.activeProject?.id === projectId) {
+      if (state.activeProject?.id === projectId) {
         commit('SET_ACTIVE_PROJECT', updatedProject)
       }
       return updatedProject
     } catch (error) {
-      const errorMsg = error.response?.data?.message || 'Failed to update project'
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to update project'
       commit('SET_ERROR', errorMsg)
       throw error
     } finally {

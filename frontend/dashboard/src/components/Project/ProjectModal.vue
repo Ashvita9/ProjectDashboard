@@ -109,7 +109,7 @@ export default {
         }
         this.close()
       } catch (error) {
-        const errorMsg = error.response?.data?.message || 'Operation failed'
+        const errorMsg = error.response?.data?.message || error.message || 'Operation failed'
         this.errors.push(errorMsg)
       } finally {
         this.isLoading = false

@@ -59,11 +59,13 @@ class ProjectView(APIView):
             project.description = description
             project.owner = user  # Assign User object, not string
             project.save()
+            serialized_project = ProjectSerializer(project).data
         except Exception as e:
             return Response({'message': 'project creation failed', 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
         return Response(
             {
-                "project": ProjectSerializer(project).data,
+                "project": serialized_project,
                 "message": "project created successfully"
             },
             status=status.HTTP_201_CREATED
@@ -89,10 +91,11 @@ class ProjectView(APIView):
         project.description = request_data.get('description', '')
         try:
             project.save()
+            serialized_project = ProjectSerializer(project).data
         except Exception as e:
             return Response({'message': 'project update failed', 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        return Response({"project": ProjectSerializer(project).data, "message": "project updated"}, status=status.HTTP_200_OK)
+        return Response({"project": serialized_project, "message": "project updated"}, status=status.HTTP_200_OK)
 
     def patch(self, request):
         """Partial update: requires `project_id` and `user_id`. Only supplied fields are updated."""
@@ -123,10 +126,11 @@ class ProjectView(APIView):
 
         try:
             project.save()
+            serialized_project = ProjectSerializer(project).data
         except Exception as e:
             return Response({'message': 'project partial update failed', 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        return Response({"project": ProjectSerializer(project).data, "message": "project partially updated"}, status=status.HTTP_200_OK)
+        return Response({"project": serialized_project, "message": "project partially updated"}, status=status.HTTP_200_OK)
 
     def delete(self, request):
         """Delete a project: requires `project_id` and `user_id`."""
