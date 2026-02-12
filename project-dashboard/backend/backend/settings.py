@@ -85,13 +85,21 @@ STATIC_URL = 'static/'
 # CORS Configuration for Frontend Communication
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://localhost:8080", 
-    "http://127.0.0.1:8080",
+    "http://localhost:8080",
+    "http://localhost:8081",
     "http://127.0.0.1:3000",
+    "http://127.0.0.1:8080",
+    "http://127.0.0.1:8081",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all origins in debug mode
+
+# Allow the custom header `X-User-Id` used by the frontend for trusted user identification
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-user-id'
+]
 
 # MongoDB URI (if used elsewhere)
 MongoDB_URI = os.getenv('MONGODB_URI')
