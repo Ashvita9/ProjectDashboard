@@ -1,0 +1,195 @@
+{
+  "info": {
+    "name": "Project Dashboard API",
+    "_postman_id": "9b8f4f3e-0f2a-4a50-8c19-2a6f7e8b1c2d",
+    "description": "Postman collection for Project Dashboard API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"testuser1\",\n  \"email\": \"testuser1@example.com\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register/",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "register", ""]
+        }
+      }
+    },
+    {
+      "name": "Auth - Login (username)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"testuser1\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login/",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login", ""]
+        }
+      }
+    },
+    {
+      "name": "Auth - Login (email)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"testuser1@example.com\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login/",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login", ""]
+        }
+      }
+    },
+    {
+      "name": "Projects - Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"{{userId}}\",\n  \"name\": \"My First Project\",\n  \"description\": \"Project description\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/projects/",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "projects", ""]
+        }
+      }
+    },
+    {
+      "name": "Projects - List",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"{{userId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/projects/",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "projects", ""]
+        }
+      }
+    },
+    {
+      "name": "Projects - Update (PUT)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"project_id\": \"{{projectId}}\",\n  \"user_id\": \"{{userId}}\",\n  \"name\": \"Updated Project Name\",\n  \"description\": \"Updated description\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/projects/",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "projects", ""]
+        }
+      }
+    },
+    {
+      "name": "Projects - Update (PATCH)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"project_id\": \"{{projectId}}\",\n  \"user_id\": \"{{userId}}\",\n  \"name\": \"Patched Project Name\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/projects/",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "projects", ""]
+        }
+      }
+    },
+    {
+      "name": "Projects - Delete",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"project_id\": \"{{projectId}}\",\n  \"user_id\": \"{{userId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/projects/",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "projects", ""]
+        }
+      }
+    },
+    {
+      "name": "Tasks - Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"project_id\": \"{{projectId}}\",\n  \"title\": \"My First Task\",\n  \"description\": \"Task description\",\n  \"status\": \"todo\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks/",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "tasks", ""]
+        }
+      }
+    },
+    {
+      "name": "Tasks - List",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"project_id\": \"{{projectId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks/",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "tasks", ""]
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8000" },
+    { "key": "userId", "value": "" },
+    { "key": "projectId", "value": "" }
+  ]
+}
