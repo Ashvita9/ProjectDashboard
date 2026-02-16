@@ -73,7 +73,12 @@ export default {
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   padding: 14px 16px;
+  cursor: grab;
   transition: all 0.15s var(--ease);
+}
+
+.task-card:active {
+  cursor: grabbing;
 }
 
 .task-card:hover {
