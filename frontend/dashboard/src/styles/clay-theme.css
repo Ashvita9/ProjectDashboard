@@ -462,6 +462,12 @@ textarea {
   font-weight: 700 !important;
 }
 
+/* Ensure all calendar text is bold (including disabled/other states) */
+.flatpickr-calendar,
+.flatpickr-calendar * {
+  font-weight: 700 !important;
+}
+
 .flatpickr-input {
   background: transparent;
   color: var(--text-primary);
