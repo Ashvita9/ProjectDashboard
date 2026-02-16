@@ -181,6 +181,7 @@ class TaskView(APIView):
         project_id = request_data.get('project_id')
         title = request_data.get('title')
         description = request_data.get('description')
+        request_status = request_data.get('status', 'todo')
 
         project = Project.objects.filter(id=project_id).first()
         if not project:
@@ -192,8 +193,8 @@ class TaskView(APIView):
         try:
             task.title = title
             task.description = description
-            task.project = project
-            task.status = request_data.get('status', task.status)
+            task.project = project #foreign key 
+            task.status = request_status
             task.save()
         except Exception as e:
             return Response({'message': 'task creation failed', 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
