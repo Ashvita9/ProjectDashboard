@@ -404,30 +404,52 @@ textarea {
   background: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
   border: 1px solid var(--border) !important;
-  border-radius: var(--radius-md) !important;
-  box-shadow: var(--shadow-md) !important;
+  border-radius: calc(var(--radius-md) - 2px) !important;
+  box-shadow: var(--shadow-lg), var(--shadow-glow) !important;
+  max-width: 320px !important;
+  width: auto !important;
+  font-size: 13px !important;
+  padding: 10px !important;
+  transform-origin: top left;
+  z-index: 1200 !important;
 }
+
+.flatpickr-calendar .flatpickr-innerContainer {
+  padding: 6px !important;
+}
+
 .flatpickr-months .flatpickr-month {
   background: transparent !important;
   color: var(--text-primary) !important;
+  padding: 8px 6px !important;
 }
+
 .flatpickr-weekdays .flatpickr-weekday {
   color: var(--text-muted) !important;
+  font-size: 12px !important;
 }
+
 .flatpickr-day {
   color: var(--text-muted) !important;
   border-radius: 6px !important;
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 36px !important;
 }
+
 .flatpickr-day.today {
   box-shadow: none !important;
   border: 1px solid var(--border-strong) !important;
 }
+
 .flatpickr-day.selected,
 .flatpickr-day.startRange,
 .flatpickr-day.endRange {
   background: var(--accent) !important;
   color: #fff !important;
+  box-shadow: 0 6px 18px rgba(124, 92, 252, 0.22) !important;
 }
+
 .flatpickr-input {
   background: transparent;
   color: var(--text-primary);
@@ -435,7 +457,14 @@ textarea {
   border-radius: var(--radius-sm);
   padding: 8px 10px;
 }
+
 .flatpickr-time .flatpickr-time-separator { color: var(--text-muted) }
+
+/* Slight elevation and offset so the calendar visually pops above the modal */
+.flatpickr-calendar.open {
+  margin-top: 6px !important;
+  transform: translateY(4px) !important;
+}
 
 /* ── Alerts ── */
 .alert {
