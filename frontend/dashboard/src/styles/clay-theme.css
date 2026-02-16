@@ -468,6 +468,29 @@ textarea {
   font-weight: 700 !important;
 }
 
+/* Style the month dropdown (select) so its popup matches dark theme */
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: calc(var(--radius-sm) - 2px) !important;
+  padding: 6px 8px !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  font-weight: 700 !important;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months option {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  font-weight: 700 !important;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months:focus {
+  outline: none !important;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.5) !important;
+}
+
 .flatpickr-input {
   background: transparent;
   color: var(--text-primary);
