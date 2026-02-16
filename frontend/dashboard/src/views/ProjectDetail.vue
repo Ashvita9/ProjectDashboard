@@ -18,6 +18,13 @@
         </div>
       </div>
 
+      <!-- Debug panel: show runtime lists (temporary) -->
+      <div class="debug-panel" style="margin-top:16px; color:var(--text-muted); font-size:13px;">
+        <div>tasksByProjectId length: {{ (tasksByProjectId || []).length }}</div>
+        <div>columnLists.todo: {{ columnLists.todo.length }} | in_progress: {{ columnLists.in_progress.length }} | done: {{ columnLists.done.length }}</div>
+        <pre style="max-height:120px; overflow:auto; background:var(--bg-primary); padding:8px; border-radius:6px;">{{ columnLists }}</pre>
+      </div>
+
       <div v-if="errors.length" class="alert alert-error">
         <div v-for="(error, index) in errors" :key="index">{{ error }}</div>
       </div>
@@ -30,9 +37,18 @@
             <span class="col-title">{{ col.label }}</span>
             <span class="col-count">{{ col.tasks.length }}</span>
           </div>
-          <div class="col-body">
-            <TaskCard v-for="task in col.tasks" :key="task.id" :task="task" @edit="editTask(task)"
-              @deleted="loadProjectTasks" @status-changed="loadProjectTasks" />
+          <div class="col-body"
+               :class="{ 'col-drop-target': activeDropTarget === col.key }"
+               @dragenter.prevent="onDragEnter(col.key)"
+               @dragleave.prevent="onDragLeave(col.key)">
+            <draggable :list="columnLists[col.key]" :group="{ name: 'tasks', pull: true, put: true }" :animation="180"
+                       @change="onDragChange(col.key, $event)" class="task-list" tag="div" item-key="id">
+              <template #item="{ element }">
+                <div class="task-wrapper">
+                  <TaskCard :key="element.id" :task="element" @edit="editTask(element)" @deleted="loadProjectTasks" @status-changed="loadProjectTasks" />
+                </div>
+              </template>
+            </draggable>
             <div v-if="col.tasks.length === 0" class="col-empty">No tasks</div>
           </div>
         </div>
@@ -59,17 +75,26 @@
 <script>
 import { mapState } from 'vuex'
 import TaskCard from '@/components/Task/TaskCard.vue'
+import { taskService } from '@/services/task'
+import draggable from 'vuedraggable'
+import { eventBus } from '@/bus/eventBus'
 import TaskModal from '@/components/Task/TaskModal.vue'
 import ProjectModal from '@/components/Project/ProjectModal.vue'
 
 export default {
   name: 'ProjectDetail',
-  components: { TaskCard, TaskModal, ProjectModal },
+  components: { TaskCard, TaskModal, ProjectModal, draggable },
   data() {
     return {
       isLoading: false, errors: [],
       showCreateTaskModal: false, showEditTaskModal: false,
-      showEditProjectModal: false, editingTask: null
+      showEditProjectModal: false, editingTask: null,
+      activeDropTarget: null,
+      columnLists: {
+        todo: [],
+        in_progress: [],
+        done: []
+      }
     }
   },
   computed: {
@@ -104,15 +129,69 @@ export default {
       finally { this.isLoading = false }
     },
     async loadProjectTasks() {
-      try { await this.$store.dispatch('tasks/fetchTasksByProject', this.projectId) }
-      catch (e) { this.errors.push(e.response?.data?.message || 'Failed to load tasks') }
+      try {
+        await this.$store.dispatch('tasks/fetchTasksByProject', this.projectId)
+        const tasks = this.tasksByProjectId || []
+        // populate mutable lists used by draggable (mutate arrays in-place to preserve references)
+        const todo = tasks.filter(t => t.status === 'todo')
+        const inProgress = tasks.filter(t => t.status === 'in_progress')
+        const done = tasks.filter(t => t.status === 'done')
+        this.columnLists.todo.splice(0, this.columnLists.todo.length, ...todo)
+        this.columnLists.in_progress.splice(0, this.columnLists.in_progress.length, ...inProgress)
+        this.columnLists.done.splice(0, this.columnLists.done.length, ...done)
+        console.debug('Loaded tasks', { projectId: this.projectId, total: tasks.length, todo: todo.length, inProgress: inProgress.length, done: done.length })
+      } catch (e) { this.errors.push(e.response?.data?.message || 'Failed to load tasks'); console.error(e) }
     },
     editProject() { this.showEditProjectModal = true },
     editTask(task) { this.editingTask = task; this.showEditTaskModal = true },
     closeTaskModal() { this.showCreateTaskModal = false; this.showEditTaskModal = false; this.editingTask = null },
     handleProjectUpdated() { this.showEditProjectModal = false },
     handleTaskCreated() { this.closeTaskModal(); this.loadProjectTasks() },
-    handleTaskUpdated() { this.closeTaskModal(); this.loadProjectTasks() }
+    handleTaskUpdated() { this.closeTaskModal(); this.loadProjectTasks() },
+    onDragEnter(colKey) { this.activeDropTarget = colKey },
+    onDragLeave(colKey) { if (this.activeDropTarget === colKey) this.activeDropTarget = null },
+    async onDragChange(colKey, evt) {
+      // evt has properties: added, removed, moved. For cross-list move, added will be present.
+      try {
+        if (evt.added) {
+          // element has already been inserted into columnLists[colKey] by draggable
+          const task = evt.added.element
+          if (!task) return
+          const taskId = task.id
+          if (task.status === colKey) return
+
+          // optimistic: update the task object in-place
+          const old = { ...task }
+          task.status = colKey
+          this.$store.commit('tasks/UPDATE_TASK', task)
+
+          try {
+            await this.updateTaskStatus(taskId, colKey)
+            eventBus.notifySuccess('Task moved')
+            // refresh lists to stay in sync with server/state
+            await this.loadProjectTasks()
+          } catch (err) {
+            // rollback: restore old status and refresh
+            task.status = old.status
+            this.$store.commit('tasks/UPDATE_TASK', task)
+            eventBus.notifyError(err.response?.data?.message || 'Failed to move task')
+            await this.loadProjectTasks()
+          }
+        }
+      } finally {
+        this.activeDropTarget = null
+      }
+    },
+    async updateTaskStatus(taskId, status) {
+      const userId = this.$store.state.auth.userId
+      const resp = await taskService.partialUpdateTask(taskId, { status, user_id: userId })
+      const updated = resp.data?.task || resp.data
+      if (updated) {
+        // commit update to store for immediate UI sync
+        this.$store.commit('tasks/UPDATE_TASK', updated)
+      }
+      return updated
+    }
   }
 }
 </script>
@@ -236,11 +315,36 @@ export default {
   flex: 1;
 }
 
+.col-drop-target {
+  box-shadow: inset 0 0 0 3px rgba(124, 58, 237, 0.12);
+  transform: translateZ(0);
+}
+
 .col-empty {
   padding: 20px;
   text-align: center;
   font-size: 13px;
   color: var(--text-muted);
+}
+
+.task-list .task-card {
+  transition: transform 0.18s var(--ease), opacity 0.18s var(--ease);
+}
+
+.drag-ghost {
+  opacity: 0.9 !important;
+  transform: scale(0.98);
+}
+
+.task-list > * {
+  display: block;
+}
+
+.task-wrapper {
+  border: 1px dashed rgba(255,255,255,0.04);
+  padding: 6px;
+  margin-bottom: 8px;
+  background: rgba(255,255,255,0.01);
 }
 
 .empty-board {

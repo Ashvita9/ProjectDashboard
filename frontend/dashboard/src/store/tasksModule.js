@@ -36,6 +36,9 @@ const mutations = {
       ...state.tasksByProject,
       [projectId]: tasks
     }
+    // also keep top-level `state.tasks` in sync for activity views
+    const all = Object.values(state.tasksByProject).reduce((acc, arr) => acc.concat(arr || []), [])
+    state.tasks = all
   },
   ADD_TASK(state, task) {
     state.tasks.push(task)

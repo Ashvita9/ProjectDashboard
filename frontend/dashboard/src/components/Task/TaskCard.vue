@@ -43,6 +43,7 @@ export default {
       return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     },
     editTask() { this.$emit('edit') },
+    // Drag handled by vuedraggable; keep handlers removed to avoid native-drag conflicts.
     async deleteTask() {
       if (confirm('Delete this task?')) {
         try {
@@ -66,8 +67,10 @@ export default {
 
 <style scoped>
 .task-card {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
+  display: block;
+  min-height: 64px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   padding: 14px 16px;
   transition: all 0.15s var(--ease);
