@@ -1,12 +1,21 @@
 <template>
   <div class="page">
+    <!-- Loading overlay for drag operations -->
+    <transition name="fade">
+      <div v-if="isMoving" class="moving-overlay">
+        <div class="moving-spinner"></div>
+        <span>Updating...</span>
+      </div>
+    </transition>
+
     <div v-if="isLoading" class="center-state">
       <div class="spinner"></div>
+      <p class="loading-text">Loading project...</p>
     </div>
 
     <template v-else-if="activeProject">
       <!-- Header -->
-      <div class="detail-header">
+      <div class="detail-header fade-in">
         <div class="header-left">
           <router-link to="/projects" class="back-link">← Projects</router-link>
           <h1>{{ activeProject.name }}</h1>
@@ -24,34 +33,40 @@
 
       <!-- Kanban Board -->
       <div class="board">
-        <div class="board-col" v-for="col in columns" :key="col.key">
+        <div class="board-col slide-up" v-for="(col, colIndex) in columns" :key="col.key" :style="{ animationDelay: `${colIndex * 0.1}s` }">
           <div class="col-header">
             <span class="col-dot" :class="`dot-${col.key}`"></span>
             <span class="col-title">{{ col.label }}</span>
             <span class="col-count">{{ columnLists[col.key].length }}</span>
           </div>
           <div class="col-body" :class="{ 'col-drop-target': activeDropTarget === col.key }">
+            <!-- Loading skeleton -->
+            <div v-if="isLoadingTasks" class="skeleton-list">
+              <div class="skeleton-card" v-for="n in 2" :key="n"></div>
+            </div>
             <draggable
-              v-model="columnLists[col.key]"
+              v-else
+              :list="columnLists[col.key]"
               group="tasks"
-              :animation="180"
+              :animation="200"
               ghost-class="drag-ghost"
-              filter=".btn-icon, .status-select, button, select"
-              :prevent-on-filter="false"
-              :force-fallback="true"
+              chosen-class="drag-chosen"
+              drag-class="drag-active"
+              :empty-insert-threshold="100"
+              @start="onDragStart(col.key)"
+              @end="onDragEnd"
               @change="onDragChange(col.key, $event)"
               class="task-list"
             >
-              <TaskCard
-                v-for="task in columnLists[col.key]"
-                :key="task.id"
-                :task="task"
-                @edit="editTask(task)"
-                @deleted="loadProjectTasks"
-                @status-changed="loadProjectTasks"
-              />
+              <div v-for="(task, index) in columnLists[col.key]" :key="task.id" class="drag-item" :style="{ animationDelay: `${index * 0.05}s` }">
+                <TaskCard
+                  :task="task"
+                  @edit="editTask(task)"
+                  @deleted="loadProjectTasks"
+                />
+              </div>
             </draggable>
-            <div v-if="columnLists[col.key].length === 0" class="col-empty">No tasks</div>
+            <div v-if="!isLoadingTasks && columnLists[col.key].length === 0 && !isDragging" class="col-empty-text">No tasks</div>
           </div>
         </div>
       </div>
@@ -89,6 +104,10 @@ export default {
   data() {
     return {
       isLoading: false,
+      isLoadingTasks: false,
+      isMoving: false,
+      isDragging: false,
+      dragFromCol: null,
       errors: [],
       showCreateTaskModal: false,
       showEditTaskModal: false,
@@ -134,6 +153,7 @@ export default {
       finally { this.isLoading = false }
     },
     async loadProjectTasks() {
+      this.isLoadingTasks = true
       try {
         await this.$store.dispatch('tasks/fetchTasksByProject', this.projectId)
         const tasks = this.tasksByProjectId || []
@@ -145,6 +165,7 @@ export default {
         this.columnLists.in_progress.splice(0, this.columnLists.in_progress.length, ...inProgress)
         this.columnLists.done.splice(0, this.columnLists.done.length, ...done)
       } catch (e) { this.errors.push(e.response?.data?.message || 'Failed to load tasks') }
+      finally { this.isLoadingTasks = false }
     },
     editProject() { this.showEditProjectModal = true },
     editTask(task) { this.editingTask = task; this.showEditTaskModal = true },
@@ -152,6 +173,14 @@ export default {
     handleProjectUpdated() { this.showEditProjectModal = false },
     handleTaskCreated() { this.closeTaskModal(); this.loadProjectTasks() },
     handleTaskUpdated() { this.closeTaskModal(); this.loadProjectTasks() },
+    onDragStart(fromCol) {
+      this.isDragging = true
+      this.dragFromCol = fromCol
+    },
+    onDragEnd() {
+      this.isDragging = false
+      this.dragFromCol = null
+    },
     async onDragChange(colKey, evt) {
       // evt has properties: added, removed, moved. For cross-list move, added will be present.
       try {
@@ -166,18 +195,19 @@ export default {
           const old = { ...task }
           task.status = colKey
           this.$store.commit('tasks/UPDATE_TASK', task)
+          this.isMoving = true
 
           try {
             await this.updateTaskStatus(taskId, colKey)
             eventBus.notifySuccess('Task moved')
-            // refresh lists to stay in sync with server/state
-            await this.loadProjectTasks()
           } catch (err) {
             // rollback: restore old status and refresh
             task.status = old.status
             this.$store.commit('tasks/UPDATE_TASK', task)
             eventBus.notifyError(err.response?.data?.message || 'Failed to move task')
             await this.loadProjectTasks()
+          } finally {
+            this.isMoving = false
           }
         }
       } finally {
@@ -313,8 +343,8 @@ export default {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
   flex: 1;
+  position: relative;
 }
 
 .col-drop-target {
@@ -322,33 +352,49 @@ export default {
   transform: translateZ(0);
 }
 
-.col-empty {
-  padding: 20px;
-  text-align: center;
+.col-empty-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   font-size: 13px;
   color: var(--text-muted);
-}
-
-.task-list .task-card {
-  transition: transform 0.18s var(--ease), opacity 0.18s var(--ease);
-  cursor: grab;
-}
-
-.task-list .task-card:active {
-  cursor: grabbing;
-}
-
-.drag-ghost {
-  opacity: 0.6 !important;
-  transform: scale(0.98);
-  background: var(--bg-elevated);
+  pointer-events: none;
 }
 
 .task-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-height: 50px;
+  flex: 1;
+  min-height: 150px;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease;
+}
+
+.task-list:empty,
+.task-list:not(:has(.drag-item)) {
+  background: rgba(124, 58, 237, 0.03);
+  border: 2px dashed rgba(124, 58, 237, 0.15);
+}
+
+.drag-item {
+  cursor: grab;
+  transition: transform 0.15s var(--ease), opacity 0.15s var(--ease);
+}
+
+.drag-item:active {
+  cursor: grabbing;
+}
+
+.drag-ghost {
+  opacity: 0.5 !important;
+}
+
+.drag-chosen {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .empty-board {
@@ -367,6 +413,132 @@ export default {
   padding: 80px;
   gap: 16px;
   color: var(--text-muted);
+}
+
+.loading-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Moving overlay */
+.moving-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 1000;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  backdrop-filter: blur(2px);
+}
+
+.moving-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Skeleton loading */
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-card {
+  height: 80px;
+  background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-elevated) 50%, var(--bg-hover) 75%);
+  background-size: 200% 100%;
+  border-radius: var(--radius-sm);
+  animation: shimmer 1.5s infinite;
+}
+
+/* Animations */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.slide-up {
+  animation: slideUp 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+/* Transition group animations */
+.task-list-enter-active {
+  animation: slideUp 0.3s ease-out;
+}
+
+.task-list-leave-active {
+  animation: fadeIn 0.2s ease-out reverse;
+}
+
+.task-list-move {
+  transition: transform 0.3s ease;
+}
+
+.task-transition-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Fade transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Drag states */
+.drag-active {
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 @media (max-width: 768px) {
