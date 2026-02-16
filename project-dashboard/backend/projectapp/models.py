@@ -10,6 +10,9 @@ class Project(Document):
     description = StringField()
     owner = ReferenceField('User', required=True)
     created_at = DateTimeField(default=datetime.utcnow)
+    # Optional project dates
+    start_date = DateTimeField()
+    deployment_date = DateTimeField()
 
 class Task(Document):
     meta = {

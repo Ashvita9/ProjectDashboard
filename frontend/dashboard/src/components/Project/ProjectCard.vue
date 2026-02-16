@@ -11,6 +11,11 @@
     <h3 class="card-name">{{ project.name }}</h3>
     <p class="card-desc">{{ project.description || 'No description' }}</p>
 
+    <div class="card-dates" v-if="project.start_date || project.deployment_date">
+      <div class="date-item" v-if="project.start_date"><strong>Start:</strong> {{ formatDate(project.start_date) }}</div>
+      <div class="date-item" v-if="project.deployment_date"><strong>Deployment:</strong> {{ formatDate(project.deployment_date) }}</div>
+    </div>
+
     <div class="card-footer">
       <span class="card-date">{{ formatDate(project.created_at) }}</span>
       <router-link :to="`/projects/${project.id}`" class="btn btn-outline btn-sm">Open →</router-link>

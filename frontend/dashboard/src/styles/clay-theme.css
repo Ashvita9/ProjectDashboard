@@ -399,6 +399,44 @@ textarea {
   color: var(--accent-light);
 }
 
+/* Flatpickr theme overrides to match dark Clay theme */
+.flatpickr-calendar {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+.flatpickr-months .flatpickr-month {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+}
+.flatpickr-weekdays .flatpickr-weekday {
+  color: var(--text-muted) !important;
+}
+.flatpickr-day {
+  color: var(--text-muted) !important;
+  border-radius: 6px !important;
+}
+.flatpickr-day.today {
+  box-shadow: none !important;
+  border: 1px solid var(--border-strong) !important;
+}
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background: var(--accent) !important;
+  color: #fff !important;
+}
+.flatpickr-input {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+.flatpickr-time .flatpickr-time-separator { color: var(--text-muted) }
+
 /* ── Alerts ── */
 .alert {
   padding: 14px 18px;

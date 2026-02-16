@@ -64,11 +64,11 @@ const actions = {
     }
   },
 
-  async createProject({ commit }, { name, description }) {
+  async createProject({ commit }, { name, description, start_date = null, deployment_date = null }) {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
     try {
-      const response = await projectService.createProject(name, description)
+      const response = await projectService.createProject(name, description, start_date, deployment_date)
       const newProject = response.data.project
       commit('ADD_PROJECT', newProject)
       return newProject
@@ -81,11 +81,11 @@ const actions = {
     }
   },
 
-  async updateProject({ commit, state }, { projectId, name, description }) {
+  async updateProject({ commit, state }, { projectId, name, description, start_date = null, deployment_date = null }) {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
     try {
-      const response = await projectService.updateProject(projectId, name, description)
+      const response = await projectService.updateProject(projectId, name, description, start_date, deployment_date)
       const updatedProject = response.data.project || response.data.result
       
       if (!updatedProject || !updatedProject.id) {

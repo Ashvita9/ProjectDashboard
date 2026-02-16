@@ -20,6 +20,16 @@
           <textarea id="description" v-model="form.description" placeholder="What is this project about?"></textarea>
         </div>
 
+        <div class="form-group">
+          <label for="start_date">Start Date</label>
+          <flat-pickr v-model="form.start_date" :config="dateConfig" />
+        </div>
+
+        <div class="form-group">
+          <label for="deployment_date">Deployment Date</label>
+          <flat-pickr v-model="form.deployment_date" :config="dateConfig" />
+        </div>
+
         <div class="modal-footer">
           <button type="button" class="btn btn-outline" @click="close">Cancel</button>
           <button type="submit" class="btn btn-primary" :disabled="isLoading">
@@ -32,17 +42,39 @@
 </template>
 
 <script>
+import FlatPickr from 'vue-flatpickr-component'
+import 'flatpickr/dist/flatpickr.css'
+
 export default {
   name: 'ProjectModal',
+  components: { FlatPickr },
   props: { project: { type: Object, default: null } },
   data() {
-    return { form: { name: '', description: '' }, isLoading: false, errors: [] }
+    return {
+      form: { name: '', description: '', start_date: '', deployment_date: '' },
+      dateConfig: { dateFormat: 'Y-m-d', allowInput: true },
+      isLoading: false,
+      errors: []
+    }
   },
   computed: { isEditing() { return !!this.project } },
   watch: {
     project: {
       immediate: true,
-      handler(v) { if (v) this.form = { name: v.name, description: v.description || '' } }
+      handler(v) {
+        if (v) {
+          // normalize incoming dates to YYYY-MM-DD for input[type=date]
+          const fmt = d => {
+            try { return d ? new Date(d).toISOString().slice(0, 10) : '' } catch (e) { return '' }
+          }
+          this.form = {
+            name: v.name,
+            description: v.description || '',
+            start_date: fmt(v.start_date),
+            deployment_date: fmt(v.deployment_date)
+          }
+        }
+      }
     }
   },
   methods: {
@@ -54,12 +86,19 @@ export default {
       try {
         if (this.isEditing) {
           await this.$store.dispatch('projects/updateProject', {
-            projectId: this.project.id, name: this.form.name, description: this.form.description
+            projectId: this.project.id,
+            name: this.form.name,
+            description: this.form.description,
+            start_date: this.form.start_date || null,
+            deployment_date: this.form.deployment_date || null
           })
           this.$emit('updated')
         } else {
           await this.$store.dispatch('projects/createProject', {
-            name: this.form.name, description: this.form.description
+            name: this.form.name,
+            description: this.form.description,
+            start_date: this.form.start_date || null,
+            deployment_date: this.form.deployment_date || null
           })
           this.$emit('created')
         }

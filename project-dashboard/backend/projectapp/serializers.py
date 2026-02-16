@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 class ProjectSerializer(DocumentSerializer):
     class Meta:
         model = Project
-        fields = ('id', 'name', 'description', 'owner', 'created_at')
+        fields = ('id', 'name', 'description', 'owner', 'created_at', 'start_date', 'deployment_date')
         read_only_fields = ('id','owner', 'created_at')
 
 class TaskSerializer(DocumentSerializer):

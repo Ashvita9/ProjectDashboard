@@ -21,18 +21,22 @@ export const projectService = {
     return apiClient.get('/projects/')
   },
 
-  createProject(name, description = '') {
+  createProject(name, description = '', start_date = null, deployment_date = null) {
     return apiClient.post('/projects/', {
       name,
-      description
+      description,
+      start_date,
+      deployment_date
     })
   },
 
-  updateProject(projectId, name, description = '') {
+  updateProject(projectId, name, description = '', start_date = null, deployment_date = null) {
     return apiClient.put('/projects/', {
       project_id: projectId,
       name,
-      description
+      description,
+      start_date,
+      deployment_date
     })
   },
 

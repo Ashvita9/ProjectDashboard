@@ -5,6 +5,7 @@ from projectapp.models import Project, Task
 from projectapp.serializers import ProjectSerializer, TaskSerializer
 from authapp.models import User
 from authapp.serializers import UserSerializer
+from datetime import datetime
 
 def validate_keys(data, required_keys):
     missing_keys = [key for key in required_keys if key not in data]
@@ -43,6 +44,8 @@ class ProjectView(APIView):
         request_user_id = request_data.get('user_id')       
         name = request_data.get('name')
         description = request_data.get('description')
+        start_date_str = request_data.get('start_date')
+        deployment_date_str = request_data.get('deployment_date')
         required_keys = ['user_id', 'name']
         validation_response = validate_keys(request_data, required_keys)
         if validation_response:
@@ -57,6 +60,17 @@ class ProjectView(APIView):
         try:
             project.name = name
             project.description = description
+            # parse optional date strings (expecting ISO YYYY-MM-DD or full ISO)
+            if start_date_str:
+                try:
+                    project.start_date = datetime.fromisoformat(start_date_str)
+                except Exception:
+                    return Response({'message': 'invalid start_date format, expected YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
+            if deployment_date_str:
+                try:
+                    project.deployment_date = datetime.fromisoformat(deployment_date_str)
+                except Exception:
+                    return Response({'message': 'invalid deployment_date format, expected YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
             project.owner = user  # Assign User object, not string
             project.save()
             serialized_project = ProjectSerializer(project).data
@@ -89,6 +103,24 @@ class ProjectView(APIView):
 
         project.name = request_data.get('name')
         project.description = request_data.get('description', '')
+        # Full update: allow clearing dates by providing empty/null, otherwise parse
+        sd = request_data.get('start_date', None)
+        if sd is None or sd == '':
+            project.start_date = None
+        else:
+            try:
+                project.start_date = datetime.fromisoformat(sd)
+            except Exception:
+                return Response({'message': 'invalid start_date format, expected YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
+
+        dd = request_data.get('deployment_date', None)
+        if dd is None or dd == '':
+            project.deployment_date = None
+        else:
+            try:
+                project.deployment_date = datetime.fromisoformat(dd)
+            except Exception:
+                return Response({'message': 'invalid deployment_date format, expected YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             project.save()
             serialized_project = ProjectSerializer(project).data
@@ -119,6 +151,26 @@ class ProjectView(APIView):
             changed = True
         if 'description' in request_data:
             project.description = request_data.get('description')
+            changed = True
+        if 'start_date' in request_data:
+            sd = request_data.get('start_date')
+            if sd in (None, ''):
+                project.start_date = None
+            else:
+                try:
+                    project.start_date = datetime.fromisoformat(sd)
+                except Exception:
+                    return Response({'message': 'invalid start_date format, expected YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
+            changed = True
+        if 'deployment_date' in request_data:
+            dd = request_data.get('deployment_date')
+            if dd in (None, ''):
+                project.deployment_date = None
+            else:
+                try:
+                    project.deployment_date = datetime.fromisoformat(dd)
+                except Exception:
+                    return Response({'message': 'invalid deployment_date format, expected YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
             changed = True
 
         if not changed:
