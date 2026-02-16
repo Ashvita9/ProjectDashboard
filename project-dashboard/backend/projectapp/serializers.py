@@ -1,7 +1,6 @@
 from projectapp.models import Project, Task
 from rest_framework_mongoengine.serializers import DocumentSerializer
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 class ProjectSerializer(DocumentSerializer):
     class Meta:

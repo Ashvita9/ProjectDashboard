@@ -4,7 +4,6 @@ from rest_framework import status
 from projectapp.models import Project, Task
 from projectapp.serializers import ProjectSerializer, TaskSerializer
 from authapp.models import User
-from authapp.serializers import UserSerializer
 from datetime import datetime
 
 def validate_keys(data, required_keys):
@@ -19,8 +18,6 @@ def validate_keys(data, required_keys):
     )
     return None
 
-def _bool_value(value):
-    return str(value).lower() in ("1", "true", "yes", "y", "t")
 
 class ProjectView(APIView):
     def get(self, request):

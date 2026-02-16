@@ -1,4 +1,4 @@
-from mongoengine import Document, StringField, ReferenceField, ListField, DateTimeField
+from mongoengine import Document, StringField, ReferenceField, DateTimeField
 from datetime import datetime
 
 class Project(Document):

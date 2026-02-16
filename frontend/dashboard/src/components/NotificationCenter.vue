@@ -15,13 +15,24 @@ let notificationId = 0
 
 export default {
   name: 'NotificationCenter',
-  data() { return { notifications: [] } },
+  data() {
+    return {
+      notifications: [],
+      notifyHandler: null
+    }
+  },
   mounted() {
-    eventBus.onNotify((notification) => {
+    this.notifyHandler = (notification) => {
       const id = notificationId++
       this.notifications.push({ id, ...notification })
       setTimeout(() => this.removeNotification(id), 4000)
-    })
+    }
+    eventBus.onNotify(this.notifyHandler)
+  },
+  beforeDestroy() {
+    if (this.notifyHandler) {
+      eventBus.$off('notify', this.notifyHandler)
+    }
   },
   methods: {
     removeNotification(id) {

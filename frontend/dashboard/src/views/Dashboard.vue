@@ -95,7 +95,7 @@ import { mapState, mapGetters } from 'vuex'
 export default {
   name: 'Dashboard',
   data() {
-    return { isLoading: false }
+    return { isLoading: false, error: null }
   },
   computed: {
     ...mapState('auth', ['user']),
@@ -112,8 +112,11 @@ export default {
       try {
         const userId = this.$store.state.auth.userId
         await this.$store.dispatch('projects/fetchProjects', userId)
-      } catch (e) { console.error(e) }
-      finally { this.isLoading = false }
+      } catch (e) {
+        this.error = e.response?.data?.message || 'Failed to load data'
+      } finally {
+        this.isLoading = false
+      }
     },
     statusLabel(s) {
       return { todo: 'To Do', in_progress: 'Working', done: 'Done' }[s] || s

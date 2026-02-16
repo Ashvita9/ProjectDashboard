@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex'
+import { mapGetters } from 'vuex'
 import ProjectCard from '@/components/Project/ProjectCard.vue'
 import ProjectModal from '@/components/Project/ProjectModal.vue'
 
@@ -45,8 +45,7 @@ export default {
     return { showCreateModal: false, showEditModal: false, editingProject: null, errors: [] }
   },
   computed: {
-    ...mapState('projects', ['isLoading']),
-    ...mapGetters('projects', ['allProjects']),
+    ...mapGetters('projects', ['isLoading', 'allProjects']),
     projects() { return this.allProjects }
   },
   mounted() { this.loadProjects() },

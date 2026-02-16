@@ -21,8 +21,7 @@
 export default {
   name: 'TaskCard',
   props: {
-    task: { type: Object, required: true },
-    viewOnly: { type: Boolean, default: false }
+    task: { type: Object, required: true }
   },
   computed: {
     statusLabel() {
